@@ -2,11 +2,21 @@
 
 use AdventureWorks2012_Data
 
-select FirstName, LastName, PhoneNumber 
-from Person.Person inner join Person.PersonPhone
-on Person.Person.BusinessEntityID = Person.PersonPhone.BusinessEntityID
+select FirstName, LastName, 
+(select PhoneNumber
+from Person.PersonPhone as PF
+where PF.BusinessEntityID = PP.BusinessEntityID)
+from Person.Person as PP
 where FirstName like 'Pa%'
 order by FirstName
+/*HACK*/
+select FirstName, LastName,
+(select (select BusinessEntityID
+from Sales.PersonCreditCard as PCC
+where CC.CreditCardID = PCC.CreditCardID), CardType, CardNumber, ExpMonth, ExpYear
+from Sales.CreditCard as CC
+where PP.BusinessEntityID = BusinessEntityID)
+from Person.Person as PP
 
 select FirstName, LastName, CardType, CardNumber, ExpMonth, ExpYear
 from Person.Person inner join
@@ -15,33 +25,43 @@ from Sales.CreditCard inner join Sales.PersonCreditCard
 on Sales.CreditCard.CreditCardID = Sales.PersonCreditCard.CreditCardID) as TempTable
 on Person.Person.BusinessEntityID = TempTable.BusinessEntityID
 
-select Name, ProductNumber, StandardCost, TransactionType, TransactionDate, Quantity
+select [Name], ProductNumber, StandardCost, 
+(select TransactionType, TransactionDate, Quantity
+from Production.TransactionHistory as PT
+where PT.ProductID = PP.ProductID)
+from Production.Product as PP
+order by [Name]
+
+select [Name], ProductNumber, StandardCost, TransactionType, TransactionDate, Quantity
 from Production.Product inner join Production.TransactionHistory
 on Production.Product.ProductID = Production.TransactionHistory.ProductID
-order by Name
+order by [Name]
+/*END*/
 
-select FirstName, LastName, EmailAddress 
-from Person.Person inner join Person.EmailAddress
-on Person.Person.BusinessEntityID = Person.EmailAddress.BusinessEntityID
+select FirstName, LastName, 
+( select EmailAddress
+from Person.EmailAddress as PE
+where PE.BusinessEntityID = PP.BusinessEntityID)
+from Person.Person as PP
 order by FirstName
 
 /* task 2 */
 
 use master
 
-create database MyJoinsDB
+create database MySubqueryDB
 on
 (
-	name = 'MyJoinsDB',
-	filename = 'D:\hardWork\courses\SQL\lesson5\MyJoinsDB.mdf',
+	name = 'MySubqueryDB',
+	filename = 'D:\courses\sql-hw\lesson6\MySubqueryDB.mdf',
 	size = 2mb,
 	maxsize = 4mb,
 	filegrowth = 1mb
 )
 log on
 (
-	name = 'LogMyJoinsDB',
-	filename = 'D:\hardWork\courses\SQL\lesson5\MyJoinsDB.ldf',
+	name = 'LogMySubqueryDB',
+	filename = 'D:\courses\sql-hw\lesson6\MySubqueryDB.ldf',
 	size = 2mb,
 	maxsize = 4mb,
 	filegrowth = 1mb
@@ -50,7 +70,7 @@ collate cyrillic_general_ci_as
 
 /* task 3 */
 
-use MyJoinsDB
+use MySubqueryDB
 
 create table Employees
 (
@@ -76,9 +96,14 @@ create table OtherInfo
 
 /* task 4 */
 
-select Name, PhoneNumber, Residence
-from Employees left outer join OtherInfo
-on Employees.EmployeeID = OtherInfo.EmployeeID
+select Name, PhoneNumber, 
+(select Residence
+from OtherInfo) as Residence
+from Employees
+
+select BirthDate,
+
+from OtherInfo
 
 select Name, BirthDate, PhoneNumber 
 from Employees inner join 
