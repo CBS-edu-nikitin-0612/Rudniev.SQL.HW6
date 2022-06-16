@@ -9,34 +9,24 @@ where PF.BusinessEntityID = PP.BusinessEntityID)
 from Person.Person as PP
 where FirstName like 'Pa%'
 order by FirstName
-/*HACK*/
+
 select FirstName, LastName,
-(select (select BusinessEntityID
-from Sales.PersonCreditCard as PCC
-where CC.CreditCardID = PCC.CreditCardID), CardType, CardNumber, ExpMonth, ExpYear
-from Sales.CreditCard as CC
-where PP.BusinessEntityID = BusinessEntityID)
+(select CardType from Sales.CreditCard as CC where BusinessEntityID in 
+(select BusinessEntityID from Sales.PersonCreditCard as PCC where CC.CreditCardID = PCC.CreditCardID)) as CardType,
+(select CardNumber from Sales.CreditCard as CC where BusinessEntityID in 
+(select BusinessEntityID from Sales.PersonCreditCard as PCC where CC.CreditCardID = PCC.CreditCardID)) as CardNumber,
+(select ExpMonth from Sales.CreditCard as CC where BusinessEntityID in 
+(select BusinessEntityID from Sales.PersonCreditCard as PCC where CC.CreditCardID = PCC.CreditCardID)) as ExpMonth,
+(select ExpYear from Sales.CreditCard as CC where BusinessEntityID in 
+(select BusinessEntityID from Sales.PersonCreditCard as PCC where CC.CreditCardID = PCC.CreditCardID)) as ExpYear
 from Person.Person as PP
 
-select FirstName, LastName, CardType, CardNumber, ExpMonth, ExpYear
-from Person.Person inner join
-(select BusinessEntityID, CardType, CardNumber, ExpMonth, ExpYear
-from Sales.CreditCard inner join Sales.PersonCreditCard
-on Sales.CreditCard.CreditCardID = Sales.PersonCreditCard.CreditCardID) as TempTable
-on Person.Person.BusinessEntityID = TempTable.BusinessEntityID
-
 select [Name], ProductNumber, StandardCost, 
-(select TransactionType, TransactionDate, Quantity
-from Production.TransactionHistory as PT
-where PT.ProductID = PP.ProductID)
+(select TransactionType from Production.TransactionHistory where ProductID = PP.ProductID) as TransactionType,
+(select TransactionDate from Production.TransactionHistory where ProductID = PP.ProductID) as TransactionDate,
+(select Quantity from Production.TransactionHistory where ProductID = PP.ProductID) as Quantity
 from Production.Product as PP
 order by [Name]
-
-select [Name], ProductNumber, StandardCost, TransactionType, TransactionDate, Quantity
-from Production.Product inner join Production.TransactionHistory
-on Production.Product.ProductID = Production.TransactionHistory.ProductID
-order by [Name]
-/*END*/
 
 select FirstName, LastName, 
 ( select EmailAddress
@@ -102,15 +92,10 @@ from OtherInfo) as Residence
 from Employees
 
 select BirthDate,
-
-from OtherInfo
-
-select Name, BirthDate, PhoneNumber 
-from Employees inner join 
-(select EmployeeID, BirthDate
-from OtherInfo
-where MaritalStatus = 'single') as TempTable
-on Employees.EmployeeID = TempTable.EmployeeID
+(select [Name] from Employees as EMP where EMP.EmployeeID = OI.EmployeeID) as [Name],
+(select PhoneNumber from Employees as EMP where EMP.EmployeeID = OI.EmployeeID) as PhoneNumber
+from OtherInfo as OI
+where MaritalStatus = 'single'
 
 select Name, PhoneNumber, BirthDate
 from Employees inner join
